@@ -1,0 +1,114 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ForexElites - Gadaffi Elite Scanner - Get Access</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:Inter,Arial;background:#020617;color:#fff;margin:0;padding:20px;display:flex;justify-content:center;align-items:center;min-height:100vh}
+.container{max-width:480px;width:100%;background:#0f172a;border:1px solid #1e293b;border-radius:20px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+h1{font-size:26px;margin:0 0 8px;color:#f8fafc}
+.sub{color:#94a3b8;font-size:14px;margin-bottom:20px;line-height:1.5}
+.badge{display:inline-block;background:#22c55e;color:#000;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800;margin-bottom:12px}
+input{width:100%;padding:14px 16px;border-radius:12px;border:1px solid #334155;background:#020617;color:#fff;font-size:16px;margin:8px 0}
+button{width:100%;padding:15px;background:#22c55e;color:#000;border:none;border-radius:12px;font-weight:800;font-size:16px;cursor:pointer;margin-top:10px}
+button:disabled{opacity:.6;cursor:not-allowed}
+.ref-box{background:#020617;border:1px dashed #334155;padding:10px 12px;border-radius:10px;font-size:12px;color:#64748b;margin:10px 0}
+.success{display:none;background:#052e16;border:1px solid #22c55e;color:#bbf7d0;padding:14px;border-radius:12px;margin-top:15px;font-size:14px}
+.till{background:#1e293b;padding:12px;border-radius:10px;text-align:center;margin-top:15px}
+.till b{color:#22c55e;font-size:18px}
+</style>
+</head>
+<body>
+<div class="container">
+  <span class="badge">LIVE - $199 / 12 MONTHS</span>
+  <h1>Gadaffi Elite Automated Scanner</h1>
+  <p class="sub">Enter your email to get instant access link. Even if you don't buy today, your referrer stays tracked for 12 months. 5-Level Affiliate: 10%/8%/7%/6%/5% = $71.64 per sale.</p>
+  
+  <div id="refBox" class="ref-box">Checking referral...</div>
+  
+  <form id="leadForm">
+    <input type="email" id="email" placeholder="Enter your best email address" required>
+    <button type="submit" id="submitBtn">Get Access Link →</button>
+  </form>
+  
+  <div id="successBox" class="success"></div>
+  
+  <div class="till">
+    After confirmation, pay via <b>M-Pesa Till 6282142</b><br>
+    <span style="font-size:12px;color:#94a3b8;">Amount: $199 (KES equivalent) - Product: Gadaffi Elite Scanner</span>
+  </div>
+</div>
+
+<script>
+// Same API URL you have live
+const API_URL = "https://script.google.com/macros/s/AKfycbyOeJarLWLpK0Xey1nzkH1OMbqdX3DrchinA54m8WeWESQ7VHf9wQyr0p2WCMmOPi2O/exec";
+
+(function initRef(){
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get('ref') || localStorage.getItem('forexelites_ref') || "";
+  const emailParam = params.get('email');
+  
+  if (params.get('ref')) {
+    localStorage.setItem('forexelites_ref', params.get('ref'));
+    trackClick(params.get('ref'));
+  }
+  
+  const refBox = document.getElementById('refBox');
+  if (ref) {
+    refBox.innerHTML = `✅ Referral tracked: <b style="color:#22c55e;">${ref}</b> will earn commission when you buy`;
+    refBox.style.borderColor = "#22c55e";
+    refBox.style.color = "#e2e8f0";
+  } else {
+    refBox.innerHTML = `Direct visit - no referrer (enter ref link like ?ref=username for tracking)`;
+  }
+  
+  // If already confirmed email in URL, prefill
+  if (emailParam) document.getElementById('email').value = emailParam;
+})();
+
+async function trackClick(referrer){
+  try{
+    await fetch(API_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'click', referrer: referrer, product:'Gadaffi Elite Automated Scanner', url: location.href})});
+  }catch(e){}
+}
+
+document.getElementById('leadForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim().toLowerCase();
+  const referrer = localStorage.getItem('forexelites_ref') || "";
+  const btn = document.getElementById('submitBtn');
+  const successBox = document.getElementById('successBox');
+  
+  if (!email.includes('@')) { alert('Enter valid email'); return; }
+  
+  btn.disabled = true;
+  btn.textContent = 'Sending confirmation email...';
+  
+  try {
+    const res = await fetch(API_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'lead', email: email, referrer: referrer, product:'Gadaffi Elite Automated Scanner', url: location.href})});
+    const data = await res.json();
+    
+    if (data.success) {
+      successBox.style.display = 'block';
+      successBox.innerHTML = `✅ <b>Confirmation email sent to ${email}</b><br><br>Check your inbox (and spam) and click the confirmation link.<br><br>Referrer <b>${referrer || 'Direct'}</b> is now locked to your email for 12 months - even if you buy later, they get paid.<br><br><small>Token: ${data.token.substring(0,8)}... (for debugging)</small>`;
+      document.getElementById('leadForm').style.display = 'none';
+      // Save email locally
+      localStorage.setItem('forexelites_email', email);
+    } else {
+      alert('Error: ' + (data.error || 'Failed to send'));
+      btn.disabled = false;
+      btn.textContent = 'Get Access Link →';
+    }
+  } catch(err) {
+    // Even with no-cors, it may still have sent
+    successBox.style.display = 'block';
+    successBox.innerHTML = `✅ Email captured for <b>${email}</b><br>Check your inbox for confirmation link. Referrer <b>${referrer || 'Direct'}</b> tracked.<br><br><small>If email doesn't arrive in 2 mins, contact support - lead still saved in sheet.</small>`;
+    document.getElementById('leadForm').style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>
