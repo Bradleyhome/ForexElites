@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard | ForexElites</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Inter,system-ui;background:#0a0a0f;color:#e2e8f0;line-height:1.6}
+  .header{background:#111827;border-bottom:1px solid #1f2937;padding:15px 20px;display:flex;justify-content:space-between;align-items:center}
+  .logo{font-weight:800;font-size:16px}
+  .logo span{color:#22c55e}
+  .user-info{display:flex;align-items:center;gap:15px;font-size:13px}
+  .logout-btn{background:#ef4444;color:#fff;border:0;padding:6px 12px;border-radius:6px;font-weight:600;cursor:pointer}
+  .wrap{max-width:1100px;margin:20px auto;padding:0 20px}
+  
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+  .stat-card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:20px}
+  .stat-title{font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;font-weight:600}
+  .stat-value{font-size:28px;font-weight:800;color:#22c55e;margin-top:5px}
+  
+  .table-card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:20px;margin-bottom:20px;overflow-x:auto}
+  .table-title{font-size:16px;font-weight:700;margin-bottom:15px;color:#e2e8f0}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;padding:10px;border-bottom:1px solid #1f2937;color:#94a3b8;font-weight:600}
+  td{padding:10px;border-bottom:1px solid #1f2937}
+  tr:last-child td{border-bottom:none}
+  .badge{background:#052e16;color:#22c55e;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+
+  /* Admin Panel Styles */
+  .admin-panel{display:none;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;margin-bottom:20px}
+  .admin-title{color:#facc15;font-weight:700;margin-bottom:15px;font-size:16px}
+  .admin-form{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end}
+  .admin-form label{font-size:11px;color:#94a3b8;display:block;margin-bottom:4px}
+  .admin-form input{width:100%;padding:8px;border-radius:6px;border:1px solid #334155;background:#0a0a0f;color:#fff;font-size:13px}
+  .deliver-btn{background:#22c55e;color:#000;border:0;padding:9px 15px;border-radius:6px;font-weight:700;cursor:pointer;height:35px}
+  .deliver-btn:disabled{opacity:0.5;cursor:not-allowed}
+  #adminMessage{font-size:13px;margin-top:10px;display:none;padding:10px;border-radius:6px}
+
+  @media(max-width:768px){
+    .stats-grid{grid-template-columns:1fr}
+    .admin-form{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">FOREXELITES <span>DASHBOARD</span></div>
+  <div class="user-info">
+    <span id="userEmail" style="color:#94a3b8">Loading...</span>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- ADMIN PANEL -->
+  <div id="adminPanel" class="admin-panel">
+    <div class="admin-title">⚡ Admin: Verify Sale & Deliver Scanner</div>
+    <div class="admin-form">
+      <div>
+        <label>Client Email</label>
+        <input type="email" id="clientEmail" placeholder="client@gmail.com">
+      </div>
+      <div>
+        <label>M-Pesa / TXID Code</label>
+        <input type="text" id="mpesaCode" placeholder="e.g. QWE123XYZ">
+      </div>
+      <div>
+        <label>Affiliate Ref Code</label>
+        <input type="text" id="affiliateRef" placeholder="e.g. GADAFFI">
+      </div>
+      <button id="deliverBtn" class="deliver-btn" onclick="deliverProduct()">Deliver 🚀</button>
+    </div>
+    <div id="adminMessage"></div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-title">Total Sales Volume</div>
+      <div class="stat-value" id="totalSales">$0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-title">Total Commissions Earned</div>
+      <div class="stat-value" id="totalComm">$0</div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-title">Recent Sales</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Client Email</th>
+          <th>Amount</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="salesTable">
+        <tr><td colspan="4" style="text-align:center;color:#64748b">Loading data...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-title">Recent Commissions</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Role</th>
+          <th>Amount</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="commTable">
+        <tr><td colspan="4" style="text-align:center;color:#64748b">Loading data...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbxonwmI2i9gekW_0UOY1BRzjnS2-FXklAIwnCLYhQ4oObsUZJlAdut4b1pSvf45dFtt/exec";
+
+const userStr = localStorage.getItem('forexelites_user');
+if (!userStr) {
+  window.location.href = 'login.html';
+}
+
+const user = JSON.parse(userStr);
+document.getElementById('userEmail').innerText = `${user.email} (${user.role})`;
+
+// Show Admin Panel if role is Admin
+if (user.role === 'Admin') {
+  document.getElementById('adminPanel').style.display = 'block';
+  // Pre-fill the ref code input with the Admin's ref
+  document.getElementById('affiliateRef').value = user.ref; 
+}
+
+async function loadData() {
+  try {
+    const res = await fetch(`${API_URL}?action=dashboard&email=${encodeURIComponent(user.email)}&role=${encodeURIComponent(user.role)}&ref=${encodeURIComponent(user.ref)}`);
+    const data = await res.json();
+    
+    if(data.success) {
+      document.getElementById('totalSales').innerText = `$${data.totalSales.toFixed(2)}`;
+      document.getElementById('totalComm').innerText = `$${data.totalComm.toFixed(2)}`;
+      
+      const salesTbody = document.getElementById('salesTable');
+      if(data.recentSales.length === 0) {
+        salesTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#64748b">No sales yet.</td></tr>';
+      } else {
+        salesTbody.innerHTML = data.recentSales.map(sale => `
+          <tr>
+            <td>${new Date(sale[0]).toLocaleDateString()}</td>
+            <td>${sale[1]}</td>
+            <td>$${sale[4]}</td>
+            <td><span class="badge">${sale[6]}</span></td>
+          </tr>
+        `).join('');
+      }
+      
+      const commTbody = document.getElementById('commTable');
+      if(data.recentComms.length === 0) {
+        commTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#64748b">No commissions yet.</td></tr>';
+      } else {
+        commTbody.innerHTML = data.recentComms.map(comm => `
+          <tr>
+            <td>${new Date(comm[0]).toLocaleDateString()}</td>
+            <td>${comm[2]}</td>
+            <td style="color:#22c55e;font-weight:600">$${Number(comm[3]).toFixed(2)}</td>
+            <td><span class="badge" style="background:${comm[5]==='Instant Payout'?'#1e3a8a':'#052e16'};color:${comm[5]==='Instant Payout'?'#60a5fa':'#22c55e'}">${comm[5]}</span></td>
+          </tr>
+        `).join('');
+      }
+    }
+  } catch (err) {
+    console.error("Error fetching data:", err);
+  }
+}
+
+async function deliverProduct() {
+  const email = document.getElementById('clientEmail').value.trim();
+  const mpesa = document.getElementById('mpesaCode').value.trim();
+  const ref = document.getElementById('affiliateRef').value.trim();
+  const btn = document.getElementById('deliverBtn');
+  const msg = document.getElementById('adminMessage');
+
+  if(!email || !mpesa || !ref) {
+    msg.style.display = 'block';
+    msg.style.background = '#451a1a';
+    msg.style.color = '#ef4444';
+    msg.innerText = 'Please fill in all fields.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerText = 'Processing...';
+  msg.style.display = 'none';
+
+  try {
+    const res = await fetch(`${API_URL}?action=admin_deliver&email=${encodeURIComponent(email)}&mpesa=${encodeURIComponent(mpesa)}&referrer=${encodeURIComponent(ref)}`);
+    const data = await res.json();
+
+    if (data.success) {
+      msg.style.display = 'block';
+      msg.style.background = '#052e16';
+      msg.style.color = '#22c55e';
+      msg.innerText = `✅ Success! License ${data.key} generated and email sent to ${email}.`;
+      
+      // Clear form
+      document.getElementById('clientEmail').value = '';
+      document.getElementById('mpesaCode').value = '';
+      
+      // Reload dashboard data to show the new sale
+      loadData();
+    } else {
+      throw new Error(data.error || 'Unknown error');
+    }
+  } catch (err) {
+    msg.style.display = 'block';
+    msg.style.background = '#451a1a';
+    msg.style.color = '#ef4444';
+    msg.innerText = `❌ Error: ${err.message}`;
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Deliver 🚀';
+  }
+}
+
+function logout() {
+  localStorage.removeItem('forexelites_user');
+  window.location.href = 'login.html';
+}
+
+loadData();
+</script>
+
+</body>
+</html>
